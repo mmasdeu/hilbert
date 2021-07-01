@@ -1,36 +1,31 @@
 import tactic
+import data.set
 import .lesson2
 
 noncomputable theory
 open_locale classical
 
-open hilbertplane
+open PreHilbertPlane
+open HilbertPlane
+open set
 
 section plane_separation
 
-variable {Ω : HilbertPlane}
-variables {A B C : Ω.Point}
-variables {r s ℓ: Ω.Line}
+variables {Ω : Type*} [HilbertPlane Ω]
 
+variables {A B C : Ω}
+variables {ℓ r s : Line Ω}
 
-definition same_side (ℓ : Ω.Line) (A B: Ω.Point) := (A ∈ ℓ ∧ B ∈ ℓ) ∨ ( (A#B) ∩ ℓ = ∅ )
-
+definition same_side (ℓ : Line Ω) (A B: Ω) := (A ∈ ℓ ∧ B ∈ ℓ) ∨ (  (pts (A⬝B) ∩ ℓ) = ∅)
 
 lemma same_side.refl : same_side ℓ A A :=
 begin
     by_cases hA : A ∈ ℓ,
+        exact or.inl ⟨hA, hA⟩,
     {
         unfold same_side,
-        left,
-        exact ⟨hA, hA⟩,
-    },
-    {
-        unfold same_side,
-        right,
-        have g := point_is_segment A,
-        rw g,
-        rw set.singleton_inter_eq_empty,
-        exact hA,
+        rw [point_is_segment A, set.singleton_inter_eq_empty],
+        exact or.inr hA,
     }
 end
 
@@ -43,19 +38,27 @@ begin
 	tauto,
 end
 
-lemma point_not_on_line_of_line_segment_not_intersect (h : (A#B) ∩ ℓ = ∅) : A ∉ ℓ ∧ B ∉ ℓ :=
+lemma same_side.symm_iff :
+		same_side ℓ A B ↔ same_side ℓ B A :=
 begin
-    rw [HilbertPlane.line_segment_def, set.eq_empty_iff_forall_not_mem] at h,
-    dsimp,
-    split,
-    work_on_goal 0 {intro H, apply h A},
-    work_on_goal 1 {intro H, apply h B},
-    all_goals{
-        dsimp,
-        split,
-        simp only [set.mem_insert_iff, set.mem_singleton, or_true, true_or, eq_self_iff_true],
-        assumption,
-    },
+    split;
+    apply same_side.symm,
+end
+
+
+lemma point_not_on_line_of_line_segment_not_intersect_left (h : (pts (A⬝B) ∩ ℓ) = ∅) : A ∉ ℓ :=
+begin
+    intro H,
+    simp at h,
+    rw [set.eq_empty_iff_forall_not_mem] at h,
+    apply h A,
+    simpa,
+end
+
+lemma point_not_on_line_of_line_segment_not_intersect_right (h : pts (A⬝B) ∩ ℓ = ∅) : B ∉ ℓ :=
+begin
+    rw segments_are_symmetric at h,
+    exact point_not_on_line_of_line_segment_not_intersect_left h,
 end
 
 lemma point_on_line_of_same_side (h : same_side ℓ A B) : A ∈ ℓ ↔ B ∈ ℓ :=
@@ -64,90 +67,48 @@ begin
     cases h,
     tauto,
     {
-        have hc := point_not_on_line_of_line_segment_not_intersect h,
+        have hcl := point_not_on_line_of_line_segment_not_intersect_left h,
+        have hcr := point_not_on_line_of_line_segment_not_intersect_right h,
         tauto,
     }
 end
         
-lemma same_side_trans_of_noncollinear (h : ¬ HilbertPlane.collinear A C B):
+lemma same_side_trans_of_noncollinear (h : ¬ collinear A C B):
 	same_side ℓ A B → same_side ℓ B C → same_side ℓ A C :=
 begin
 	intros hAB hBC,
     unfold same_side at *,
-    by_cases hA : A ∈ ℓ,
-    {
-        left,
-        have H1 := point_on_line_of_same_side hAB,
-        have H2 := point_on_line_of_same_side hBC,
-        split;
-        {
-            try {rw [←H2,←H1]},
-            exact hA,
-        }
-    },
-    replace hAB : (A#B) ∩ ℓ = ∅,
-    {
-        cases hAB;
-        tauto,
-    },
-    have hB : B ∉ ℓ := (point_not_on_line_of_line_segment_not_intersect hAB).2,
-    replace hBC : (B#C) ∩ ℓ = ∅,
-    {
-        cases hBC;
-        tauto,
-    },
-    have hC : C ∉ ℓ := (point_not_on_line_of_line_segment_not_intersect hBC).2,  
+    have H1 := point_on_line_of_same_side hAB,
+    have H2 := point_on_line_of_same_side hBC,
+    by_cases hA : A ∈ ℓ, by exact or.inl ⟨hA, H2.1 (H1.1 hA)⟩,
+    replace hAB : pts (A⬝B) ∩ ℓ = ∅, tauto,
+    have hB : B ∉ ℓ := point_not_on_line_of_line_segment_not_intersect_right hAB,
+    replace hBC : pts (B⬝C) ∩ ℓ = ∅, tauto,
+    have hC : C ∉ ℓ := point_not_on_line_of_line_segment_not_intersect_right hBC,
     right,
 	rw set.eq_empty_iff_forall_not_mem,
+    -- Now the main part of the proof. AC ∩ ℓ = ∅
+    -- So let D be a point in AC and in ℓ. We'll prove False.
 	rintro D ⟨ hDAC, hD⟩,
-	have hAD : D ≠ A,
-	{
-		intro hc,
-		rw hc at hD,
-		exact hA hD,
-	},
-	have hCD : D ≠ C,
-	{
-		intro hc,
-		rw hc at hD,
-		exact hC hD,
-	},
-	simp only [set.mem_insert_iff,
-		line_segment_simp, set.mem_singleton_iff,
-		set.mem_union_eq, set.mem_set_of_eq,
-		set.union_singleton] at hDAC,
-	replace hDAC : A * D * C, by tauto,
-	rcases (HilbertPlane.B4 h hA hC hB hD hDAC) with
+    obtain rfl | hAD := em(D = A), exact hA hD, -- D ≠ A
+    obtain rfl | hCD := em(D = C), exact hC hD, -- D ≠ C
+    simp only [segments_are_symmetric, Segment.mem_coe_to_mem_pts] at hDAC,
+    replace hDAC : C * D * A, tauto,
+    replace hDAC : A * D * C := B11 hDAC, -- So D is between A and C
+	rcases (B4 h hA hC hB hD hDAC) with
 		⟨ ⟨E, hE, h1⟩, hF⟩ | ⟨ ⟨E, ⟨ hE, h1⟩ ⟩, hF⟩,
 	{
-		have l_meets_AB : set.nonempty ((A#B) ∩ ℓ),
-		{
-			rw set.nonempty_def,
-			use E,
-			refine set.mem_sep _ hE,
-			rw HilbertPlane.line_segment_def,
-			right,
-			exact h1,
-		},
-		replace l_meets_AB : ¬ (A#B) ∩ ℓ = ∅ := set.nmem_singleton_empty.mpr l_meets_AB,
-        tauto,
+        suffices l_meets_AB : (pts (A⬝B) ∩ ℓ ≠ ∅), by tauto,
+        apply set.nmem_singleton_empty.mpr,
+        have h2 : B * E * A := B11 h1,
+        exact ⟨E, ⟨or.inr (or.inr h1), hE⟩⟩,
 	},
-	have l_meets_CB : set.nonempty ((C#B) ∩ ℓ),
-	{
-		rw set.nonempty_def,
-		use E,
-		dsimp,
-		split,
-		{
-			simp only [set.mem_insert_iff, line_segment_simp, set.mem_singleton_iff, set.mem_union_eq,
-set.mem_set_of_eq, set.union_singleton],
-			tauto,
-		},
-        apply hE,
-	},
-	replace l_meets_CB : ¬ (C#B) ∩ ℓ = ∅ := set.nmem_singleton_empty.mpr l_meets_CB,
-	simp only [segments_are_symmetric] at l_meets_CB,
-	tauto,
+    {
+        suffices l_meets_CB : pts (B⬝C) ∩ ℓ ≠ ∅, by tauto,
+        apply set.nmem_singleton_empty.mpr,
+        rw [segments_are_symmetric, set.nonempty_def],
+        exact ⟨E, ⟨or.inr (or.inr h1), hE⟩⟩,
+    },
 end
 
 end plane_separation
