@@ -12,7 +12,7 @@ def xor3 (p q r : Prop) : Prop := (p ∧ ¬ q ∧ ¬ r) ∨ (¬ p ∧ q ∧ ¬ r
 
 class PreHilbertPlane (Point : Type*) :=
 	(Line : Type*)
-    (belongs : Point → Line → Prop)
+  (belongs : Point → Line → Prop)
 	(between : Point → Point → Point → Prop)
 
   (notation A `∈` ℓ := belongs A ℓ)
@@ -190,11 +190,14 @@ variables {Ω : Type*} [HilbertPlane Ω]
 
 def nondegenerate (T : Triangle Ω) := ¬ collinear T.A T.B T.C
 
+def similar_triangles (T R : Triangle Ω) :=
+	(∟ T.B T.A T.C ≃ ∟ R.B R.A R.C)
+∧ (∟ T.A T.C T.B ≃ ∟ R.A R.C R.B)
+∧ (∟ T.C T.B T.A ≃ ∟ R.C R.B R.A)
+
 def congruent_triangles (T R : Triangle Ω) :=
+	similar_triangles T R ∧
 	(T.A⬝T.B ≅ R.A⬝R.B) ∧ (T.A⬝T.C ≅ R.A⬝R.C) ∧ (T.B⬝T.C ≅ R.B⬝R.C)
-	∧ (∟ T.B T.A T.C ≃ ∟ R.B R.A R.C)
-	∧ (∟ T.A T.C T.B ≃ ∟ R.A R.C R.B)
-	∧ (∟ T.C T.B T.A ≃ ∟ R.C R.B R.A)
 
 instance : has_mem Ω (Triangle Ω) :=
 ⟨λ P T, P ∈ pts (T.A⬝T.B) ∨ P ∈ pts (T.B⬝T.C) ∨ P ∈ pts (T.A⬝T.C)⟩
