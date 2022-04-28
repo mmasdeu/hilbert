@@ -59,15 +59,15 @@ begin
         rw mem_coe_to_mem at hx,
         rcases H with (H|H|H),
         any_goals {subst H, simp only at hx, exfalso},
-        work_on_goal 2 {have hxℓ : x ∈ ℓ := between_points_share_line hB hC H},
-        work_on_goal 0 {obtain rfl | ht := em(A = B)},
-        work_on_goal 2 {obtain rfl | ht := em(A = C)},
-        work_on_goal 4 {obtain rfl | ht := em(A = x)},
+        work_on_goal 3 {have hxℓ : x ∈ ℓ := between_points_share_line hB hC H},
+        work_on_goal 1 {obtain rfl | ht := em(A = B)},
+        work_on_goal 3 {obtain rfl | ht := em(A = C)},
+        work_on_goal 5 {obtain rfl | ht := em(A = x)},
         any_goals
         {
-                apply hBAC,
-                norm_num,
-                try {tauto},
+            apply hBAC,
+            norm_num,
+            try {tauto},
         },
         all_goals
         {

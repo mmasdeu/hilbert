@@ -59,7 +59,8 @@ open PreHilbertPlane
 /-- A segment is created by giving two points. -/
 structure Segment (Point : Type*) :=
 	(A : Point) (B : Point)
-notation A `⬝`:100 B := Segment.mk A B
+
+infix `⬝`:100 := Segment.mk
 
 namespace Segment
 variables {Ω : Type*} [PreHilbertPlane Ω]

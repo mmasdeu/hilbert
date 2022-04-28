@@ -23,8 +23,8 @@ begin
 		tauto,
 	},
 	cases h1 with h_isA h_isB,
-	work_on_goal 0 {use A},
-	work_on_goal 1 {use B},
+	work_on_goal 1 {use A},
+	work_on_goal 2 {use B},
 	repeat {tauto},
 end
 

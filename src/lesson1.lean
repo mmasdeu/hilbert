@@ -15,8 +15,7 @@ variables {ℓ r s : Line Ω}
 
 lemma I11 (h: A ≠ B) : ∃ (ℓ : Line Ω), A ∈ ℓ ∧ B ∈ ℓ := exists_of_exists_unique (I1 h)
 
-lemma I12
-    (h: A ≠ B) (hAr: A ∈ r) (hBr : B ∈ r) (hAs : A ∈ s) (hBs : B ∈ s) : r = s :=
+lemma I12 (h: A ≠ B) (hAr: A ∈ r) (hBr : B ∈ r) (hAs : A ∈ s) (hBs : B ∈ s) : r = s :=
 begin
     apply (unique_of_exists_unique (I1 h));
     tauto,

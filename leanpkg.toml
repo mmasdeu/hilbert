@@ -1,8 +1,8 @@
 [package]
 name = "hilbert"
 version = "0.1"
-lean_version = "leanprover-community/lean:3.20.0"
+lean_version = "leanprover-community/lean:3.42.1"
 path = "src"
 
 [dependencies]
-mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "4a8c38e466819a47573ac40ef02edf393fa1ae0d"}
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "0cb20fca1930098392174cd182c7618375b3a0ff"}

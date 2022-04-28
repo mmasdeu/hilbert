@@ -82,9 +82,9 @@ begin
 end
 
 /- (using C4 and C1)
- Construct an angle ∟ C' A' B'' on the other side of A'=>C' from B'
- that is congruent to ∟ BAC and at the same time A'B''
- is congruent to AB.
+Construct an angle ∟ C' A' B'' on the other side of A'=>C' from B'
+that is congruent to ∟ BAC and at the same time A'B''
+is congruent to AB.
 -/
 lemma transport_angle_to_other_ray ( A B C A' B' C' : Ω)
     (h: (▵ A B C).nondegenerate) (h': (▵ A' B' C').nondegenerate) :
@@ -120,19 +120,19 @@ begin
 end
 
 /- Proposition 10.1 (SSS) of Hartshorne
-   If two triangles have their respective sides equal,
-   then they are congruent.
+If two triangles have their respective sides equal,
+then they are congruent.
 -/
 theorem triangle_SSS' (A B C A' B' C' : Ω) : 
- (▵ A B C).nondegenerate → (▵ A' B' C').nondegenerate →
-    (A⬝B ≅ A'⬝B') → (A⬝C ≅ A'⬝C') → (B⬝C ≅ B'⬝C') → 
-    (∟ B A C ≃ ∟ B' A' C') ∧ (∟ A C B ≃ ∟ A' C' B') ∧ (∟ C B A ≃ ∟ C' B' A') :=
+(▵ A B C).nondegenerate → (▵ A' B' C').nondegenerate →
+(A⬝B ≅ A'⬝B') → (A⬝C ≅ A'⬝C') → (B⬝C ≅ B'⬝C') → 
+(∟ B A C ≃ ∟ B' A' C') ∧ (∟ A C B ≃ ∟ A' C' B') ∧ (∟ C B A ≃ ∟ C' B' A') :=
 begin
     intros hT hT' hAB hAC hBC,
     /- (using C4 and C1)
-     Construct an angle ∟ C' A' B'' on the other side of A'=>C' from B'
-     that is congruent to ∟ BAC and at the same time A'B''
-     is congruent to AB.
+    Construct an angle ∟ C' A' B'' on the other side of A'=>C' from B'
+    that is congruent to ∟ BAC and at the same time A'B''
+    is congruent to AB.
     -/
     have hACp : A' ≠ C',
     {
@@ -176,9 +176,9 @@ theorem triangle_SSS (T T' : Triangle Ω) :
 begin
     intros hAB hAC hBC,
     /- (using C4 and C1)
-     Construct an angle ∟ C' A' B'' on the other side of A'=>C' from B'
-     that is congruent to ∟ BAC and at the same time A'B''
-     is congruent to AB.
+    Construct an angle ∟ C' A' B'' on the other side of A'=>C' from B'
+    that is congruent to ∟ BAC and at the same time A'B''
+    is congruent to AB.
     -/
     let AB := T.A⬝T.B,
     have E := HilbertPlane.C4 (∟ T.B T.A T.C) (T'.A=>T'.C),
