@@ -128,16 +128,34 @@ begin
     use A,
 end
 
-lemma collinear_order_irrelevant_v1 {A B C : Ω} : collinear A B C ↔
+lemma collinear_iff_12 {A B C : Ω} : collinear A B C ↔  -- v1
 	collinear B A C:=
 begin
 	simp only [collinear_iff],
 	tauto,
 end
 
-lemma collinear_order_irrelevant_v2 {A B C : Ω} : collinear A B C ↔
+lemma collinear_iff_123 {A B C : Ω} : collinear A B C ↔ -- v2
 	collinear B C A:=
 begin
 	simp only [collinear_iff],
 	tauto,
+end
+
+lemma collinear_iff_23 {A B C : Ω} : collinear A B C ↔ collinear A C B :=
+begin
+    nth_rewrite 1 collinear_iff_12,
+    nth_rewrite 1 collinear_iff_123,
+end
+
+lemma collinear_iff_13 {A B C : Ω} : collinear A B C ↔ collinear  C B A :=
+begin
+    nth_rewrite 0 collinear_iff_123,
+    exact collinear_iff_12,
+end 
+
+lemma collinear_iff_132 {A B C : Ω} : collinear A B C ↔ collinear C A B := 
+begin
+    nth_rewrite 0 collinear_iff_12,
+    exact collinear_iff_13,
 end

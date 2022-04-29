@@ -138,7 +138,7 @@ begin
 end
 
 lemma at_most_two_classes_line (hAℓ : A ∈ ℓ) : ¬ same_side_of_line hAℓ B C →
-     ¬ same_side_of_line hAℓ B D → same_side_of_line hAℓ C D :=
+¬ same_side_of_line hAℓ B D → same_side_of_line hAℓ C D :=
 begin
     sorry
 end

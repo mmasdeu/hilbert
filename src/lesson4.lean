@@ -108,8 +108,7 @@ begin
 intros hAB hBC,
 by_cases ¬ collinear A B C,
 {
-	rw collinear_order_irrelevant_v1 at h,
-	rw collinear_order_irrelevant_v2 at h,
+	rw collinear_iff_23 at h,
 	exact same_side_trans_of_noncollinear h hAB hBC,
 },
 {
@@ -132,7 +131,7 @@ by_cases ¬ collinear A B C,
 	obtain ⟨D,E, ⟨ hDℓ, hEℓ, hAE, hDAE, hABE, hECB, hACE⟩⟩ :=
 		auxiliary_point ℓ h _ _ _ _ _ _,
 	{
-		rw collinear_order_irrelevant_v2 at hABE,
+		rw collinear_iff_123 at hABE,
 		have hBE : same_side ℓ B E :=
 			same_side_trans_of_noncollinear hABE (same_side.symm hAB) hAE,
 		have hEC : same_side ℓ E C :=

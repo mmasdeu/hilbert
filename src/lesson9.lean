@@ -44,10 +44,11 @@ begin
             {
                 split,
                 {
-                    sorry
+                    rw collinear_iff_23 at h1 hE,
+                    exact collinear_of_collinear_collinear hAB h1.1 hE.1,
                 },
                 {
-                    sorry
+                    
                 },
             },
         },

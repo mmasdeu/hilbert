@@ -97,7 +97,7 @@ begin
 	{
 		have hAneqB : A ≠ B := point_neq_of_not_same_side hA hB hAB,
 		have hAneqC : A ≠ C := point_neq_of_not_same_side hA hC hAC,
-		rw [collinear_order_irrelevant_v1, ←collinear_order_irrelevant_v2] at h,
+		rw ←collinear_iff_13 at h,
 		obtain ⟨D,E, ⟨ hDℓ, hEℓ, hCE, hDCE, hCBE, hEAB, hCAE⟩⟩ :=
 			auxiliary_point ℓ h hC hB hA (ne.symm hBneqC) (ne.symm hAneqC) (ne.symm hAneqB),
 		obtain rfl | BnE := em(B = E),
@@ -111,7 +111,7 @@ begin
 		},
 		have hBsE : same_side ℓ B E,
 		{
-			rw collinear_order_irrelevant_v2 at hEAB,
+			rw collinear_iff_123 at hEAB,
 			apply at_most_two_classes_of_noncollinear hA hB hEℓ,
 			repeat {assumption},
 		},

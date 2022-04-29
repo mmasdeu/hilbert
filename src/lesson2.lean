@@ -7,7 +7,7 @@ open PreHilbertPlane
 
 variables {Ω : Type*} [HilbertPlane Ω]
 
-variables {A B C : Ω}
+variables {A B C D : Ω}
 variables {ℓ r s : Line Ω}
 
 lemma point_in_line_difference (h : r ≠ s) :
@@ -58,4 +58,15 @@ begin
 	obtain ⟨hAB, hAC, hBC, ⟨ ℓ, ⟨ hAℓ, hBℓ, hCℓ⟩⟩⟩ := H,
 	suffices : r = ℓ, by rwa this,
 	apply equal_lines_of_contain_two_points hAB; assumption,
+end
+
+lemma collinear_of_collinear_collinear (hAB : A ≠ B) (hABC : collinear A B C) (hABD : collinear A B D) :
+collinear A C D :=
+begin
+	obtain ⟨r, hr⟩ := hABC,
+	obtain ⟨s, hs⟩ := hABD,
+	have hkey : r = s := equal_lines_of_contain_two_points hAB hr.1 hs.1 hr.2.1 hs.2.1,
+	subst hkey,
+	use r,
+	tauto,
 end
