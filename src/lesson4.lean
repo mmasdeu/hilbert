@@ -16,14 +16,13 @@ variables {A B C : Ω}
 variables {ℓ r s : Line Ω}
 
 
-lemma auxiliary_point (ℓ : Line Ω) (h : collinear A B C) (hA : ¬ A ∈ ℓ) (hB : ¬ B ∈ ℓ)
+lemma auxiliary_point (ℓ : Line Ω) (h : collinear_triple A B C) (hA : ¬ A ∈ ℓ) (hB : ¬ B ∈ ℓ)
 	(hC : ¬ C ∈ ℓ) (hAB : A ≠ B) (hAC : A ≠ C) (hBC : B ≠ C)  :
 	∃ (D E : Ω), D ∈ ℓ ∧ ¬ E ∈ ℓ ∧ same_side ℓ A E ∧ (D * A * E) ∧
-					¬ collinear A B E ∧
-					¬ collinear E C B ∧
-					¬ collinear A C E  :=
+					¬ collinear_triple A B E ∧
+					¬ collinear_triple E C B ∧
+					¬ collinear_triple A C E  :=
 begin
-	simp only [collinear_iff] at h,
 	obtain ⟨ m, ⟨hAm, hBm, hCm⟩ ⟩ := h,
 	obtain rfl | ℓ_not_m := em(ℓ = m),
 		tauto,
@@ -37,7 +36,7 @@ begin
 	},
 	have HE : ∃ E : Ω, D * A * E := HilbertPlane.B2 hDA,
 	cases HE with E hE,
-	have hDAE : collinear D A E := (HilbertPlane.B12 hE).2.2.2,
+	have hDAE : collinear_triple D A E := (HilbertPlane.B12 hE).2.2.2,
 	rcases hDAE with ⟨ 	s, ⟨ hDs,hAs, hEs⟩⟩,
 	
 	have ℓ_not_s : ℓ ≠ s,
@@ -70,7 +69,7 @@ begin
 				exact between_points_share_line hAs hEs h,
 			},
 			subst x_is_D,
-			have hxAE : collinear x A E := (HilbertPlane.B12 hE).2.2.2,
+			have hxAE : collinear_triple x A E := (HilbertPlane.B12 hE).2.2.2,
 			have Hfin := HilbertPlane.B3 hxAE,
 			unfold xor3 at Hfin,
 			tauto,
@@ -90,7 +89,6 @@ begin
 	all_goals
 	{
 		intro h,
-		rw collinear_iff at h,
 		obtain ⟨ t, ⟨ hAt, hBt, hEt⟩⟩ := h,
 		have m_eq_t : m = t,
 		{
@@ -106,10 +104,11 @@ end
 lemma same_side.trans : same_side ℓ A B → same_side ℓ B C → same_side ℓ A C :=
 begin
 intros hAB hBC,
-by_cases ¬ collinear A B C,
+by_cases ¬ collinear_triple A B C,
 {
-	rw collinear_iff_23 at h,
-	exact same_side_trans_of_noncollinear h hAB hBC,
+	apply same_side_trans_of_noncollinear _ hAB hBC,
+	rw collinear_triple_of_equal A C B A B C,
+	exact h,
 },
 {
 	-- A B C collinear
@@ -131,7 +130,7 @@ by_cases ¬ collinear A B C,
 	obtain ⟨D,E, ⟨ hDℓ, hEℓ, hAE, hDAE, hABE, hECB, hACE⟩⟩ :=
 		auxiliary_point ℓ h _ _ _ _ _ _,
 	{
-		rw collinear_iff_123 at hABE,
+		rw collinear_triple_of_equal A B E B E A at hABE,
 		have hBE : same_side ℓ B E :=
 			same_side_trans_of_noncollinear hABE (same_side.symm hAB) hAE,
 		have hEC : same_side ℓ E C :=

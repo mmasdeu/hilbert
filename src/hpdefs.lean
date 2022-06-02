@@ -43,13 +43,27 @@ lemma I2 (ℓ : Line Ω) : ∃ A B : Ω, A ≠ B ∧ A ∈ ℓ ∧ B ∈ ℓ := 
 lemma I3 : ∃ A B C : Ω, A ≠ B ∧ A ≠ C ∧ B ≠ C ∧ ∀ ℓ : Line Ω, A ∈ ℓ ∧ B ∈ ℓ → ¬ C ∈ ℓ := I3'
 
 
-def collinear (A B C : Ω) := ∃ (ℓ : Line Ω), A ∈ ℓ ∧ B ∈ ℓ ∧ C ∈ ℓ
-@[simp] lemma collinear_iff {A B C : Ω} :
-	collinear A B C ↔ ∃ ℓ : Line Ω, A ∈ ℓ ∧ B ∈ ℓ ∧ C ∈ ℓ := iff.rfl
+def collinear_triple (A B C : Ω) : Prop := ∃ {ℓ : Line Ω}, A ∈ ℓ ∧ B ∈ ℓ ∧ C ∈ ℓ
+@[simp] lemma collinear_triple_iff {A B C : Ω} :
+	collinear_triple A B C ↔ ∃ ℓ : Line Ω, A ∈ ℓ ∧ B ∈ ℓ ∧ C ∈ ℓ := iff.rfl
 
-def intersect (r s : Line Ω) := ∃ A, A ∈ r ∧ A ∈ s
+def collinear (S : set Ω) : Prop := ∃ {ℓ : Line Ω}, ∀ {P}, P ∈ S → P ∈ ℓ
 
-def parallel (r s : Line Ω) := (r = s) ∨ (¬ intersect r s)
+@[simp]
+lemma collinear_def (A B C : Ω) : collinear_triple A B C ↔ collinear ({A, B, C} : set Ω) :=
+begin
+	split;
+	{
+		intro h,
+		obtain ⟨ℓ, hℓ⟩ := h,
+		use ℓ,
+		finish,
+	},
+end
+
+def intersect (r s : Line Ω) : Prop := ∃ A, A ∈ r ∧ A ∈ s
+
+def parallel (r s : Line Ω) : Prop := (r = s) ∨ (¬ intersect r s)
 notation r `||` s := parallel r s
 
 end PreHilbertPlane
@@ -81,7 +95,6 @@ instance has_coe_to_set : has_coe (Segment Ω) (set Ω) := ⟨pts⟩
 
 end Segment
 
-
 structure Ray (Point : Type*):=
 	(origin : Point) (target : Point)
 notation A `=>` B := Ray.mk A B
@@ -90,14 +103,16 @@ namespace Ray
 variables {Ω : Type*} [PreHilbertPlane Ω]
 
 instance : has_mem Ω (Ray Ω) :=
-⟨λ P r, P = r.origin ∨ (collinear r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target))⟩
+⟨λ P r, P = r.origin ∨ (collinear_triple r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target))⟩
 
 instance has_coe_to_set : has_coe (Ray Ω) (set Ω) := ⟨pts⟩
 @[simp] lemma mem_coe_to_mem_pts (P : Ω) (r : Ray Ω) :
 	P ∈ (r : set Ω) ↔
-	P = r.origin ∨ (collinear r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target)) := iff.rfl
+	P = r.origin ∨ (collinear_triple r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target)) := iff.rfl
 @[simp] lemma mem_pts (P : Ω) (r : Ray Ω) :
-	P ∈ pts r ↔ P = r.origin ∨ (collinear r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target)) := iff.rfl
+	P ∈ pts r ↔ P = r.origin ∨ (collinear_triple r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target)) := iff.rfl
+
+def nondegenerate (r : Ray Ω) := r.origin ≠ r.target
 
 end Ray
 
@@ -108,7 +123,7 @@ notation `∟`:100 := Angle.mk
 namespace Angle
 variables {Ω : Type*} [PreHilbertPlane Ω]
 
-def nondegenerate (a : Angle Ω) := ¬ collinear a.A a.x a.B
+def nondegenerate (a : Angle Ω) := ¬ collinear_triple a.A a.x a.B
 
 instance : has_mem Ω (Angle Ω) :=
 ⟨λ P a, P ∈ pts (a.x=>a.A) ∨ P ∈ pts (a.x=>a.B)⟩
@@ -124,22 +139,71 @@ instance has_coe_to_set : has_coe (Angle Ω) (set Ω) := ⟨pts⟩
 
 end Angle
 
+namespace HilbertPlane
+variables {Ω : Type*} [PreHilbertPlane Ω]
+variables {A B : Ω}
+variables {r s : Line Ω}
+
+lemma I11 (h: A ≠ B) : ∃ (ℓ : Line Ω), A ∈ ℓ ∧ B ∈ ℓ := exists_of_exists_unique (I1 h)
+
+lemma I12 (h: A ≠ B) (hAr: A ∈ r) (hBr : B ∈ r) (hAs : A ∈ s) (hBs : B ∈ s) : r = s :=
+begin
+    apply (unique_of_exists_unique (I1 h));
+    tauto,
+end
+
+lemma there_are_two_points : ∃ A B : Ω, (A ≠ B) :=
+begin
+    rcases I3 with ⟨A, ⟨B, ⟨C, ⟨h1, h2⟩⟩⟩⟩,
+    use [A, B],
+		exact _inst_1,
+end
+
+def line_through_aux (A B : Ω) : {ℓ : Line Ω // A ∈ ℓ ∧ B ∈ ℓ} :=
+begin
+    apply classical.indefinite_description,
+    by_cases h : A = B,
+    {
+        subst h,
+        have h1 : ∃ C D : Ω, C ≠ D := there_are_two_points,
+        obtain ⟨C, D, hC⟩ := h1,
+        by_cases h1 : A = C,
+        {
+            subst h1,
+            obtain ⟨ℓ, hAℓ, _⟩ := I11 hC,
+            exact ⟨ℓ, hAℓ, hAℓ⟩,
+        },
+        {
+            obtain ⟨ℓ, hAℓ, _⟩ := I11 h1,
+            exact ⟨ℓ, hAℓ, hAℓ⟩,
+        },
+    },
+    exact I11 h,
+end
+
+def same_side  (ℓ : Line Ω) (A B: Ω) := (A ∈ ℓ ∧ B ∈ ℓ) ∨ ( pts (A⬝B) ∩ ℓ = ∅)
+def line_through (A B : Ω) : Line Ω := (line_through_aux A B).1
+
+end HilbertPlane
+
+open HilbertPlane
+
 class HilbertPlane (Point : Type*) extends PreHilbertPlane Point :=
 	/- Betweenness is symmetric -/
 	(B11 {A B C : Point} : (A * B * C) → (C * B * A))
 	/- If A * B * C then the three points are distinct and collinear. -/
-	(B12 {A B C : Point} : (A * B * C) → (A ≠ B ∧ A ≠ C ∧ B ≠ C ∧ collinear A B C))
+	(B12 {A B C : Point} : (A * B * C) → (A ≠ B ∧ A ≠ C ∧ B ≠ C ∧ collinear_triple A B C))
 	/- Given two distinct points A, B, there is a third point C such that A * B * C.-/
 	(B2 {A B : Point} (h: A ≠ B) : ∃ C, A * B * C)
 	/- Given 3 distinct collinear points A B C, exactly one of them is between the other two.-/
-	(B3 {A B C : Point} (h: collinear A B C) :
+	(B3 {A B C : Point} (h: collinear_triple A B C) :
 		xor3 (A * B * C) ( B * A * C ) (A * C * B))
 
 	(B4 {A B C D : Point} {ℓ : Line} -- Pasch
-		(hnc: ¬ collinear A B C)
+		(hnc: ¬ collinear_triple A B C)
 		(hnAl: ¬ (A ∈ ℓ)) (hnBl: ¬ B ∈ ℓ) (hnCl: ¬ C ∈ ℓ)
 		(hDl: D ∈ ℓ) (hADB: A * D * B) :
-            (∃ E ,  E ∈ ℓ ∧ (A * E * C)) xor (∃ E, E ∈ ℓ ∧ (B * E * C)))
+    (∃ E ,  E ∈ ℓ ∧ (A * E * C)) xor (∃ E, E ∈ ℓ ∧ (B * E * C)))
 
 	(seg_cong : Segment Point → Segment Point → Prop)
 	(notation X `≅`:50 Y := seg_cong X Y)
@@ -153,34 +217,34 @@ class HilbertPlane (Point : Type*) extends PreHilbertPlane Point :=
 	/- Congruence of segments is reverse-transitive -/
 	(C21 (S T U): (S ≅ T) → (S ≅ U) → (T ≅ U))
 	/- Congruence of segments is reflexive.
-	   Note that this together with C21 implies symmetry of congruence. -/
+	Note that this together with C21 implies symmetry of congruence. -/
 	(C22 (S) : S ≅ S)
 	/- Congruence of segments respects the notion of sum of segments -/
 	(C3 (A B C D E F) : (A * B * C) → (D * E * F) →
 		((A⬝B) ≅ (D⬝E)) → ((B⬝C) ≅ (E⬝F)) → ((A⬝C) ≅ (D⬝F)))
 	/- Given a nondegenerate angle α, a segment AB, and a point s,
-	   construct a point E on the same side as s, such that ∟EAB ≃ α. -/
+	construct a point E on the same side as s, such that ∟EAB ≃ α. -/
 	(C4 (α : Angle Point) (S : Ray Point) (s : Point)
-		(hα : α.nondegenerate) (hs : ¬ collinear s S.origin S.target)
-		(hr : S.origin ≠ S.target) :  ∃! E : Point,
-		(∟ E S.origin S.target ≃ α) ∧ 
-		 ∀ x, (E * x * s) → ∀ (ℓ : Line), S.origin ∈ ℓ ∧ S.target ∈ ℓ 
-		 → ¬ x ∈ ℓ)
+		(hα : α.nondegenerate) (hs : ¬ collinear_triple s S.origin S.target) :
+		∃! ℓ : Line, ∃ E : Point, E ∈ ℓ ∧ S.origin ∈ ℓ ∧ (∟ E S.origin S.target ≃ α)
+		∧ same_side (line_through S.origin S.target) E s)
 	/- Congruence of angles is reverse-transitive.-/
 	(C5 (α β γ : Angle Point) : α ≃ β → α ≃ γ → β ≃ γ)
 	/- Given triangles T and T', if they have two sides and their middle angle
-	   congruent, then the third sides and the other two angles are also congruent.-/
+	congruent, then the third sides and the other two angles are also congruent.-/
 	(C6 (A B C A' B' C') : (A⬝B ≅ A'⬝B') → (A⬝C ≅ A'⬝C') → (∟ B A C ≃ ∟ B' A' C') →
 		(B⬝C ≅ B'⬝C') ∧ (∟ A B C ≃ ∟ A' B' C') ∧ (∟ A C B ≃ ∟ A' C' B'))
 
 class EuclideanPlane (Point : Type*) extends HilbertPlane Point :=
 	(parallel_postulate {ℓ r s : Line} :
-		(intersect r s) ∧ (r || ℓ) ∧ (s || ℓ) → (r = s))
+		(intersect r s) → (r || ℓ) → (s || ℓ) → (r = s))
 
 namespace HilbertPlane
 
 notation X `≅`:50 Y:50 := HilbertPlane.seg_cong X Y
 notation X `≃`:50 Y:50 := HilbertPlane.ang_cong X Y
+
+end HilbertPlane
 
 structure Triangle (Point : Type*) :=
 	(A : Point) (B : Point)	(C : Point)
@@ -189,16 +253,15 @@ notation `▵`:100 := Triangle.mk
 namespace Triangle
 variables {Ω : Type*} [HilbertPlane Ω]
 
-def nondegenerate (T : Triangle Ω) := ¬ collinear T.A T.B T.C
+def nondegenerate (T : Triangle Ω) := ¬ collinear_triple T.A T.B T.C
 
-def similar_triangles (T R : Triangle Ω) :=
+def is_similar (T R : Triangle Ω) : Prop :=
 	(∟ T.B T.A T.C ≃ ∟ R.B R.A R.C)
 ∧ (∟ T.A T.C T.B ≃ ∟ R.A R.C R.B)
 ∧ (∟ T.C T.B T.A ≃ ∟ R.C R.B R.A)
 
-def congruent_triangles (T R : Triangle Ω) :=
-	similar_triangles T R ∧
-	(T.A⬝T.B ≅ R.A⬝R.B) ∧ (T.A⬝T.C ≅ R.A⬝R.C) ∧ (T.B⬝T.C ≅ R.B⬝R.C)
+def is_congruent (T R : Triangle Ω) : Prop :=
+	is_similar T R ∧ (T.A⬝T.B ≅ R.A⬝R.B) ∧ (T.A⬝T.C ≅ R.A⬝R.C) ∧ (T.B⬝T.C ≅ R.B⬝R.C)
 
 instance : has_mem Ω (Triangle Ω) :=
 ⟨λ P T, P ∈ pts (T.A⬝T.B) ∨ P ∈ pts (T.B⬝T.C) ∨ P ∈ pts (T.A⬝T.C)⟩
@@ -213,5 +276,3 @@ instance has_coe_to_set : has_coe (Triangle Ω) (set Ω) := ⟨pts⟩
 	P ∈ pts (T.A⬝T.B) ∨ P ∈ pts (T.B⬝T.C) ∨ P ∈ pts (T.A⬝T.C) := iff.rfl
 
 end Triangle
-
-end HilbertPlane

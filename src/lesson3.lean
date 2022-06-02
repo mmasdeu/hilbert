@@ -16,7 +16,6 @@ variables {Ω : Type*} [HilbertPlane Ω]
 variables {A B C : Ω}
 variables {ℓ r s : Line Ω}
 
-definition same_side (ℓ : Line Ω) (A B: Ω) := (A ∈ ℓ ∧ B ∈ ℓ) ∨ (  (pts (A⬝B) ∩ ℓ) = ∅)
 
 lemma same_side.refl : same_side ℓ A A :=
 begin
@@ -49,7 +48,6 @@ end
 lemma point_not_on_line_of_line_segment_not_intersect_left (h : (pts (A⬝B) ∩ ℓ) = ∅) : A ∉ ℓ :=
 begin
     intro H,
-    simp at h,
     rw [set.eq_empty_iff_forall_not_mem] at h,
     apply h A,
     simpa,
@@ -73,7 +71,7 @@ begin
     }
 end
         
-lemma same_side_trans_of_noncollinear (h : ¬ collinear A C B):
+lemma same_side_trans_of_noncollinear (h : ¬ collinear_triple A C B):
 	same_side ℓ A B → same_side ℓ B C → same_side ℓ A C :=
 begin
 	intros hAB hBC,

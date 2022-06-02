@@ -4,63 +4,21 @@ import tactic
 open_locale classical
 noncomputable theory
 
-open PreHilbertPlane
-open Segment
-open Ray
+open PreHilbertPlane HilbertPlane Segment Ray
 
 variables {Ω : Type*} [HilbertPlane Ω]
 
 variables {A B C : Ω}
 variables {ℓ r s : Line Ω}
 
-lemma I11 (h: A ≠ B) : ∃ (ℓ : Line Ω), A ∈ ℓ ∧ B ∈ ℓ := exists_of_exists_unique (I1 h)
+lemma line_through_left {A B : Ω}: A ∈ line_through A B :=
+(line_through_aux A B).2.1
 
-lemma I12 (h: A ≠ B) (hAr: A ∈ r) (hBr : B ∈ r) (hAs : A ∈ s) (hBs : B ∈ s) : r = s :=
-begin
-    apply (unique_of_exists_unique (I1 h));
-    tauto,
-end
+lemma line_through_right {A B : Ω}: B ∈ (line_through A B) :=
+(line_through_aux A B).2.2
 
-lemma there_are_two_points : ∃ A B : Ω, (A ≠ B) :=
-begin
-    rcases I3 with ⟨A, ⟨B, ⟨C, ⟨h1, h2⟩⟩⟩⟩,
-    use [A, B],
-    exact HilbertPlane.to_PreHilbertPlane,
-end
-
-def line_through_points_aux (A B : Ω) : {ℓ : Line Ω // A ∈ ℓ ∧ B ∈ ℓ} :=
-begin
-    apply classical.indefinite_description,
-    by_cases h : A = B,
-    {
-        subst h,
-        have h1 : ∃ C D : Ω, C ≠ D := there_are_two_points,
-        obtain ⟨C, D, hC⟩ := h1,
-        by_cases h1 : A = C,
-        {
-            subst h1,
-            obtain ⟨ℓ, hAℓ, _⟩ := I11 hC,
-            exact ⟨ℓ, hAℓ, hAℓ⟩,
-        },
-        {
-            obtain ⟨ℓ, hAℓ, _⟩ := I11 h1,
-            exact ⟨ℓ, hAℓ, hAℓ⟩,
-        },
-    },
-    exact I11 h,
-end
-
-
-def line_through_points (A B : Ω) : Line Ω := (line_through_points_aux A B).1
-
-lemma line_through_points_left {A B : Ω}: A ∈ line_through_points A B :=
-(line_through_points_aux A B).2.1
-
-lemma line_through_points_right {A B : Ω}: B ∈ (line_through_points A B) :=
-(line_through_points_aux A B).2.2
-
-lemma line_unique {A B : Ω} : A ≠ B → A ∈ ℓ → B ∈ ℓ → ℓ = line_through_points A B :=
-λ ab al bl, I12 ab al bl line_through_points_left line_through_points_right
+lemma line_unique {A B : Ω} : A ≠ B → A ∈ ℓ → B ∈ ℓ → ℓ = line_through A B :=
+λ ab al bl, I12 ab al bl line_through_left line_through_right
 
 lemma distinct_lines_have_at_most_one_common_point
 	(hrs: r ≠ s)
@@ -84,7 +42,7 @@ begin
     rcases hx with (h | h | h); tauto,
 end
 
-@[simp] lemma segments_are_symmetric : pts (A⬝B) = B⬝A :=
+lemma segments_are_symmetric : pts (A⬝B) = B⬝A :=
 begin
     apply set.subset.antisymm; exact segments_are_symmetric',
 end
@@ -126,36 +84,4 @@ begin
         use B,
     },
     use A,
-end
-
-lemma collinear_iff_12 {A B C : Ω} : collinear A B C ↔  -- v1
-	collinear B A C:=
-begin
-	simp only [collinear_iff],
-	tauto,
-end
-
-lemma collinear_iff_123 {A B C : Ω} : collinear A B C ↔ -- v2
-	collinear B C A:=
-begin
-	simp only [collinear_iff],
-	tauto,
-end
-
-lemma collinear_iff_23 {A B C : Ω} : collinear A B C ↔ collinear A C B :=
-begin
-    nth_rewrite 1 collinear_iff_12,
-    nth_rewrite 1 collinear_iff_123,
-end
-
-lemma collinear_iff_13 {A B C : Ω} : collinear A B C ↔ collinear  C B A :=
-begin
-    nth_rewrite 0 collinear_iff_123,
-    exact collinear_iff_12,
-end 
-
-lemma collinear_iff_132 {A B C : Ω} : collinear A B C ↔ collinear C A B := 
-begin
-    nth_rewrite 0 collinear_iff_12,
-    exact collinear_iff_13,
 end

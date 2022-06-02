@@ -37,7 +37,7 @@ end
 
 lemma at_most_two_classes_of_noncollinear (hA : ¬ A ∈ ℓ) (hB : ¬ B ∈ ℓ) (hC : ¬ C ∈ ℓ)
 		(hBneqC : B ≠ C) (hAB: ¬ same_side ℓ A B) (hAC: ¬ same_side ℓ A C)
-		(h : ¬ collinear A B C) : same_side ℓ B C :=
+		(h : ¬ collinear_triple A B C) : same_side ℓ B C :=
 begin
 	suffices : pts (B⬝C) ∩ ℓ = ∅,
 	{
@@ -93,11 +93,11 @@ end
 lemma same_side.at_most_two_classes	(hA : ¬ A ∈ ℓ) (hB : ¬ B ∈ ℓ) (hC : ¬ C ∈ ℓ)
 		(hBneqC : B ≠ C) (hAB: ¬ same_side ℓ A B) (hAC: ¬ same_side ℓ A C): same_side ℓ B C :=
 begin
-	by_cases collinear A B C,
+	by_cases collinear_triple A B C,
 	{
 		have hAneqB : A ≠ B := point_neq_of_not_same_side hA hB hAB,
 		have hAneqC : A ≠ C := point_neq_of_not_same_side hA hC hAC,
-		rw ←collinear_iff_13 at h,
+		rw collinear_triple_of_equal A B C C B A at h,
 		obtain ⟨D,E, ⟨ hDℓ, hEℓ, hCE, hDCE, hCBE, hEAB, hCAE⟩⟩ :=
 			auxiliary_point ℓ h hC hB hA (ne.symm hBneqC) (ne.symm hAneqC) (ne.symm hAneqB),
 		obtain rfl | BnE := em(B = E),
@@ -111,7 +111,7 @@ begin
 		},
 		have hBsE : same_side ℓ B E,
 		{
-			rw collinear_iff_123 at hEAB,
+			rw collinear_triple_of_equal E A B A B E at hEAB,
 			apply at_most_two_classes_of_noncollinear hA hB hEℓ,
 			repeat {assumption},
 		},

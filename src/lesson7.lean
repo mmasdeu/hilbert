@@ -4,8 +4,7 @@ import .lesson6
 noncomputable theory
 open_locale classical
 
-open PreHilbertPlane
-open HilbertPlane
+open PreHilbertPlane HilbertPlane
 
 section plane_separation
 
@@ -15,8 +14,6 @@ variables {ℓ r s : Line Ω}
 variables {B C D: {x : Ω // x ∈ ℓ}}
 variables {A : Ω}
 
---@[simp] def same_side_of_line (hAℓ : A ∈ ℓ) := λ x y,
---    ((x : Ω) = y) ∨ (¬ (A : Ω) ∈ (x : Ω) ⬝ y)
 @[simp] def same_side_of_line (hAℓ : A ∈ ℓ) (B C : {x : Ω // x ∈ ℓ}) := 
     ((B : Ω) = C) ∨ (¬ (A : Ω) ∈ (B : Ω) ⬝ C)
 
@@ -115,9 +112,9 @@ lemma same_side_of_line.trans (hAℓ : A ∈ ℓ) :
     same_side_of_line hAℓ B C → same_side_of_line hAℓ C D →  same_side_of_line hAℓ B D :=
 begin
     obtain ⟨E, hE⟩ := exists_point_not_on_line ℓ,
-    let r := line_through_points A E,
-    have hEr : E ∈ r := line_through_points_right,
-    have hAr : A ∈ r := line_through_points_left,
+    let r := line_through A E,
+    have hEr : E ∈ r := line_through_right,
+    have hAr : A ∈ r := line_through_left,
     obtain rfl | hr := em(r = ℓ), by tauto,
     repeat {rw same_side_line_vs_plane hr},
     {

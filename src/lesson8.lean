@@ -5,11 +5,13 @@ noncomputable theory
 open_locale classical
 
 open PreHilbertPlane
-open HilbertPlane.Triangle
+open Triangle
 open HilbertPlane
 
 variables {Ω : Type*} [HilbertPlane Ω]
 variables {A B C D E F : Ω}
+
+namespace Segment
 
 def is_congruent (S T : Segment Ω) : Prop := S ≅ T
 
@@ -34,3 +36,6 @@ begin
         },
     },
 end
+
+end Segment
+
