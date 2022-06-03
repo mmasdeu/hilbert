@@ -15,15 +15,6 @@ pts(ℓ) to mean the subset of all Points P such that P ∈ ℓ.
 def pts {α β : Type*} [has_mem α β] (S : β) : set α := {x : α | x ∈ S}
 @[simp] lemma mem_pts {α β : Type*} [has_mem α β] (x : α) (S : β) : x ∈ pts S ↔ x ∈ S :=  iff.rfl
 
-class subset (Point L : Type*) [has_mem Point L] [has_equiv L]
-
-instance has_coe_to_set (Point : Type*) (L : Type*) [has_mem Point L] [has_equiv L] : has_coe (subset Point L) (set Point) := ⟨
-	begin
-		intro S,
-		exact pts S,
-	end
-⟩
-
 /--
 We define an incidence plane as having the undefined terms `Point` and `Line`,
 a function `distance` that takes every two points to a real number, and a predicate
@@ -108,6 +99,7 @@ def intersect (r s : Line Ω) : Prop := ∃ A, A ∈ r ∧ A ∈ s
 
 def parallel (r s : Line Ω) : Prop := ¬ intersect r s
 
+
 /--
 Next we introduce the notion of a Segment. A segment is the giving two points, A and B.
 We will use the notation A⬝B to denote the segment denoted by A and B. The segment A⬝B consists
@@ -116,34 +108,33 @@ of all the points X such that A * X * B.
 We will identify A⬝B with B⬝A, using the symbol ≈.
 -/
 
-
-structure Segment (Point : Type*) :=
+structure Segment (Point : Type*) := 
 (A : Point) (B : Point)
+
 infix `⬝`:100 := Segment.mk
 
+
 -- Declare when P ∈ A⬝B and when A⬝B ≈ B⬝A 
-instance : subset Ω (Segment Ω) :=
-{ mem := λ P S, S.A * P * S.B,
-  equiv :=  λ S T, (S.A = T.A ∧ S.B = T.B) ∨ (S.A = T.B ∧ S.B = T.A)}
+instance : has_mem Ω (Segment Ω) := ⟨λ P S, S.A * P * S.B⟩
+instance : has_equiv (Segment Ω) := ⟨λ S T, (S.A = T.A ∧ S.B = T.B) ∨ (S.A = T.B ∧ S.B = T.A)⟩
+instance has_coe_to_set : has_coe (Segment Ω) (set Ω) := ⟨pts⟩
 
 namespace Segment
 
---instance has_coe_to_set : has_coe (Segment Ω) (set Ω) := ⟨pts⟩
 
 
 @[simp] lemma mem_pts (P : Ω) (S : Segment Ω) :
 P ∈ S ↔ (S.A * P * S.B) := iff.rfl
 
 @[simp] def length (S : Segment Ω) := distance S.A S.B
-
-
 @[simp] def congruent (S T : Segment Ω) := length S = length T
+infix `≅`:100 := congruent
 
 end Segment
 
 structure Ray (Point : Type*):=
 	(origin : Point) (target : Point)
-notation A `=>` B := Ray.mk A B
+infix `=>`:100 := Ray.mk
 
 namespace Ray
 
@@ -163,6 +154,7 @@ def same_side (ℓ : Line Ω) (P Q : Ω) := pts (P⬝Q) ∩ ℓ = ∅
 def half_plane (ℓ : Line Ω) (P : Ω) := {Q | same_side ℓ P Q}
 -- Note : with this definition, the half plane determined by a point in ℓ is the empty set.
 
+def closed_half_plane (ℓ : Line Ω) ( P : Ω) := (half_plane ℓ P) ∪ ℓ
 
 structure Angle (Point : Type*) := (A : Point) (O : Point) (B : Point)
 notation `∟`:100 := Angle.mk
@@ -170,9 +162,10 @@ notation `∟`:100 := Angle.mk
 namespace Angle
 
 def degenerate (α : Angle Ω) := collinear ({α.A, α.O, α.B} : set Ω)
-def interior (α : Angle Ω) := half_plane (line_through α.O α.A) α.B ∩ half_plane (line_through α.O α.A) α.A
+def interior (α : Angle Ω) := closed_half_plane (line_through α.O α.A) α.B ∩ closed_half_plane (line_through α.O α.A) α.A
 instance : has_equiv (Angle Ω) :=
-⟨λ α β, (((α.O => α.A) ≈ (β.O => β.A)) ∧ ((α.O => α.B) ≈ (β.O => β.B))) ∨ (((α.O => α.A) ≈ (β.O => β.B)) ∧ ((α.O => α.B) ≈ (β.O => β.A)))⟩
+⟨λ α β, ((α.O => α.A ≈ β.O => β.A) ∧ (α.O => α.B ≈ β.O => β.B)) ∨ ((α.O => α.A ≈ β.O => β.B) ∧ (α.O => α.B ≈ β.O => β.A))⟩
+
 
 end Angle
 
@@ -181,8 +174,9 @@ structure Triangle (Point : Type*) :=
 notation `▵`:100 := Triangle.mk
 
 namespace Triangle
-def vertices (T : Triangle Ω) := [T.A, T.B, T.C]
+
 def degenerate (T: Triangle Ω) := collinear ({T.A, T.B, T.C} : set Ω)
+def vertices (T : Triangle Ω) := [T.A, T.B, T.C]
 def sides (T : Triangle Ω) := [(T.A⬝T.B).length, (T.B⬝T.C).length, (T.A⬝T.C).length]
 
 instance : has_mem Ω (Triangle Ω) := ⟨λ P T, P ∈ T.A⬝T.B ∨ P ∈ T.B⬝T.C ∨ P ∈ T.A⬝T.C⟩
@@ -204,7 +198,7 @@ def between (r s t : Ray Ω) := r.origin = s.origin ∧ s.origin = t.origin ∧ 
 
 end Ray
 
-class BIYSCPlane (Point : Type*) extends IncidencePlane Point :=
+class NeutralPlane (Point : Type*) extends IncidencePlane Point :=
 	-- Ruler postulate, divided into 3 statements
 	(ruler (ℓ : Line) : Point → ℝ)
 	(ruler_dist (P Q : Point) : distance P Q = abs (ruler (line_through P Q) P - ruler (line_through P Q) Q))
@@ -227,7 +221,7 @@ class BIYSCPlane (Point : Type*) extends IncidencePlane Point :=
 	(angle_nonneg (α : Angle Point) : 0 ≤ angle_measure α)
 	(angle_bounded (α : Angle Point) : angle_measure α < 180)
 	(angle_well_def (α β: Angle Point) : α ≈ β → angle_measure α = angle_measure β)
-	(angle_nondegenerate (α : Angle Point) : (α.O => α.A) ≈ (α.O => α.B) ↔ angle_measure α = 0)
+	(angle_nondegenerate (α : Angle Point) : α.O => α.A ≈ α.O => α.B ↔ angle_measure α = 0)
 	
 	-- Angle construction
 	(angle_construction {t : ℝ} (h₀ : 0 < t) (h : t < 180) (r : Ray Point) {E : Point}
@@ -238,53 +232,68 @@ class BIYSCPlane (Point : Type*) extends IncidencePlane Point :=
 	(hE : E ∉ (r : Line)) : angle_measure (∟ r.target r.origin (angle_construction h₀ h r hE)) = t)
 	(angle_construction_unique {t : ℝ} (h₀ : 0 < t) (h : t < 180) (r : Ray Point) {E : Point}
 	(hE : E ∉ (r : Line))	(B : Point) (hB : B ∈ half_plane (r : Line) E):
-	angle_measure (∟ r.target r.origin B) = t → (r.origin => B) ≈ (r.origin => angle_construction h₀ h r hE))
+	angle_measure (∟ r.target r.origin B) = t → r.origin => B ≈ r.origin => angle_construction h₀ h r hE)
 
 	-- Angle addition
 	(angle_addition (A B C D : Point) (h : Ray.between (A=>B) (A=>D) (A=>C)) :
 	angle_measure (∟B A D) + angle_measure (∟ D A C) = angle_measure (∟ B A C) )
 
 	-- SAS
-	(SAS (S T : Triangle Point) (hAB : (S.A⬝S.B).congruent (T.A⬝T.B)) (hBC : (S.B⬝S.C).congruent (T.B⬝T.C))
+	(SAS (S T : Triangle Point) (hAB : (S.A⬝S.B) ≅ (T.A⬝T.B)) (hBC : (S.B⬝S.C) ≅ (T.B⬝T.C))
 	(hABC : angle_measure (∟ T.A T.B T.C) =  angle_measure (∟ S.A S.B S.C)) : 
-	(S.A⬝S.C).congruent (T.A⬝T.C) ∧ angle_measure (∟ T.B T.C T.A) = angle_measure (∟ S.B S.C S.A)
+	(S.A⬝S.C) ≅ (T.A⬝T.C) ∧ angle_measure (∟ T.B T.C T.A) = angle_measure (∟ S.B S.C S.A)
 	∧ angle_measure (∟ T.C T.A T.B) =  angle_measure (∟ S.C S.A S.B))
 
 namespace IncidencePlane
+variables {Ω : Type*} [NeutralPlane Ω]
+
 namespace Angle
-variables {Ω : Type*} [BIYSCPlane Ω]
-open BIYSCPlane
-def m (α : Angle Ω) := angle_measure α
+
+def m (α : Angle Ω) := NeutralPlane.angle_measure α
+@[simp] def congruent (α β : Angle Ω) := α.m = β.m
+infix `≅`:100 := congruent
+
+def is_acute (α : Angle Ω) := α.m < 90
+def is_obtuse (α : Angle Ω) := 90 < α.m
+def is_right (α : Angle Ω) := α.m = 90
+
+@[simp] def linear_pair (α β : Angle Ω) := α.O = β.O ∧ (α.O=>α.B) ≈ (α.O=>β.A) ∧ α.A * α.O * β.B
+@[simp] def supplementary (α β : Angle Ω) := α.m + β.m = 180
+
 end Angle
 
+def perpendicular (r s : Line Ω) := ∃ A B C, A ∈ r ∧ A ∈ s ∧ B ∈ r ∧ C ∈ s ∧ (∟ B A C).is_right
+infix `⊥`:100 := perpendicular
+
 namespace Triangle
-variables {Ω : Type*} [BIYSCPlane Ω]
+
 def angles (T : Triangle Ω) := [(∟ T.A T.B T.C).m, (∟ T.B T.C T.A).m, (∟ T.C T.A T.B).m]
-def congruent (T S : Triangle Ω) := T.sides = S.sides ∧ T.angles = S.angles
+@[simp] def congruent (T S : Triangle Ω) := T.sides = S.sides ∧ T.angles = S.angles
+infix `≅`:100 := congruent
 end Triangle
 
 end IncidencePlane
 
-namespace BIYSCPlane
-variables {Ω : Type*} [BIYSCPlane Ω]
+namespace NeutralPlane
+variables {Ω : Type*} [NeutralPlane Ω]
 
 lemma ruler_inj {P Q : Ω} {ℓ : Line Ω} : P ∈ ℓ → Q ∈ ℓ → ruler ℓ P = ruler ℓ Q → P = Q :=
-λ hP hQ H, (BIYSCPlane.ruler_bij ℓ).inj_on hP hQ H
+λ hP hQ H, (NeutralPlane.ruler_bij ℓ).inj_on hP hQ H
 
 def ruler_inv (ℓ : Line Ω) : ℝ → Ω := inv_fun_on (ruler ℓ) (ℓ : set Ω)
 
 lemma ruler_compat {ℓ : Line Ω} {P : Ω} (hP : P ∈ ℓ) : ruler_inv ℓ (ruler ℓ P) = P :=
-(BIYSCPlane.ruler_bij ℓ).inv_on_inv_fun_on.1 hP
+(NeutralPlane.ruler_bij ℓ).inv_on_inv_fun_on.1 hP
 
 lemma ruler_compat' (ℓ : Line Ω) (x : ℝ) : ruler ℓ (ruler_inv ℓ x) = x :=
-(surj_on.inv_on_inv_fun_on (BIYSCPlane.ruler_bij ℓ).2.2).2 (mem_univ x)
+(surj_on.inv_on_inv_fun_on (NeutralPlane.ruler_bij ℓ).2.2).2 (mem_univ x)
 
-end BIYSCPlane
+end NeutralPlane
 
-open BIYSCPlane
+open NeutralPlane
 
 -- Exercises
-variables {Ω : Type*} [BIYSCPlane Ω]
+variables {Ω : Type*} [NeutralPlane Ω]
 
 lemma distance_eq (A : Ω) : distance A A = 0 :=
 begin
@@ -554,49 +563,109 @@ begin
 	sorry
 end
 
-lemma isosceles_triangle (T : Triangle Ω) (h : (T.A⬝T.B).congruent (T.A⬝T.C)) :
-(∟ T.A T.B T.C).m = (∟ T.A T.C T.B).m :=
+lemma isosceles_triangle (T : Triangle Ω) (h : (T.A⬝T.B) ≅ (T.A⬝T.C)) :
+(∟ T.A T.B T.C) ≅ (∟ T.A T.C T.B) :=
 begin
 	set S1 := ▵ T.B T.A T.C,
 	set S2 := ▵ T.C T.A T.B,
 	simp at h,
-	have h1 : (T.B⬝T.A).congruent (T.C⬝T.A),
+	have h1 : (T.B⬝T.A) ≅ (T.C⬝T.A),
 	{
 		simp,
 		rw distance_symm,
 		rw h,
 		exact distance_symm T.A T.C,
 	},
-	have h2 : (T.A⬝T.C).congruent (T.A⬝T.B),
+	have h2 : (T.A⬝T.C) ≅ (T.A⬝T.B),
 	{
 		simp,
 		rw distance_symm,
 		rw h,
 		exact distance_symm T.C T.A,
 	},
-	have h3 : (∟ T.C T.A T.B).m = (∟ T.B T.A T.C).m,
+	have h3 : (∟ T.C T.A T.B) ≅ (∟ T.B T.A T.C),
 	{
 		apply angle_well_def,
 		unfold has_equiv.equiv,
 		simp,
 	},
-	have := (BIYSCPlane.SAS S1 S2 h1 h2 h3).2,
+	have := (NeutralPlane.SAS S1 S2 h1 h2 h3).2,
 	simpa using this.1,
 end
 
+-- Theorem 3.3.9
 lemma ray_theorem {ℓ : Line Ω} {A B C : Ω} (hA : A ∈ ℓ) (hB : B ∉ ℓ) (hC : C ∈ pts(A=>B)) (hAC : C ≠ A) :
 same_side ℓ B C :=
 begin
 	sorry
 end
 
-lemma between_iff_ray_between {A B C D : Ω} (h : ¬ collinear ({A, B, C} : set Ω)) (hD : D ∈ line_through B C)
+-- Theorem 3.3.10
+lemma point_between_iff_ray_between {A B C D : Ω} (h : ¬ collinear ({A, B, C} : set Ω)) (hD : D ∈ line_through B C)
 : (B * D * C) ↔ Ray.between (A=>B) (A=>D) (A=>C)  :=
 begin
 	sorry
 end
 
+
 lemma same_side.trans (ℓ : Line Ω) {A B C : Ω} : same_side ℓ A B → same_side ℓ B C → same_side ℓ A C :=
 begin
 	sorry
+end
+
+-- Lemma 3.4.4
+lemma ray_betweenness_aux (A B C D : Ω) (hAB : A ≠ B) (h : same_side (line_through A B) C D)
+(h' : ¬ D ∈ line_through A C) : C ∈ (∟ B A D).interior ∨ D ∈ (∟ B A C).interior :=
+begin
+sorry
+end
+
+-- Theorem 3.4.5
+theorem Ray.between_of_le_measure (A B C D : Ω) (hAB : A ≠ B) (h : same_side (line_through A B) C D) : (∟ B A D).m ≤ (∟ B A C).m ↔ Ray.between (A=>B) (A=>D) (A=>C) :=
+begin
+sorry
+end
+
+-- Theorem 3.5.1
+lemma Z_theorem (A D B E: Ω) (hAB : A ≠ D) (h : ¬ same_side (line_through A D) B E) :
+(A=>B : set Ω) ∩ D=>E = ∅ :=
+begin
+sorry
+end
+
+theorem crossbar (A B C D : Ω) (h : D ∈ (∟ B A C).interior) :
+∃ G : Ω, G ∈ A=>D ∧ G ∈ B⬝C :=
+begin
+sorry
+end
+
+-- Lemma 3.5.1
+lemma Angle.interior_of_between {A B C D E : Ω} (D : Ω) (h : C * A * B) (h' : D ∈ (∟ B A E).interior) :
+E ∈ (∟ D A C).interior :=
+begin
+sorry
+end
+
+lemma Angle.supplement_of_linear_pair (α β : Angle Ω) :
+α.linear_pair β → α.supplementary β :=
+begin
+sorry
+end
+
+
+-- TOWARDS PROVING PYTHAGORAS' THEOREM
+
+lemma perpendicular_through (ℓ : Line Ω) (P : Ω) (h : P ∉ ℓ): ∃ Q,
+Q ∈ ℓ ∧ (line_through P Q) ⊥ ℓ :=
+begin
+sorry
+end
+
+def perpendicular_foot (ℓ : Line Ω) (P : Ω) (h : P ∉ ℓ) : Ω := Exists.some $ perpendicular_through ℓ P h
+
+-- Lemma 4.8.6
+lemma perpendicular_between (A B C : Ω) (h0 : C ∉ line_through A B) (h : (∟ C A B).is_acute) (h' : (∟ A B C).is_acute)
+: A * (perpendicular_foot (line_through A B) C h0) * B :=
+begin
+sorry
 end
