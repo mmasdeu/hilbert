@@ -260,7 +260,33 @@ def is_midpoint (P Q M : Ω) := (P * M * Q) ∧ distance P M = distance M Q
 
 lemma midpoint_exists_unique (P Q : Ω) : ∃! M, is_midpoint P Q M :=
 begin
-	sorry
+	by_cases P = Q,
+	{
+		use P,
+		rw ← h,
+		split,
+		{
+			split,
+			{
+				exact between_trivial P P,
+			},
+			{
+				refl,
+			}
+		},
+		{
+			intros M hM,
+			rcases hM with ⟨⟨H1, H2⟩, h2⟩,
+			have H : distance M P = 0,
+			{
+				rwa [h2, distance_eq P, add_self_eq_zero] at H2,
+			},
+			exact (distance_nondegenerate M P).1 H,
+		},
+	},
+	{
+		sorry
+	}
 end
 
 lemma point_construction (r : Ray Ω) (h : ¬ r.degenerate) (d : ℝ) (hd : 0 ≤ d) : 
