@@ -25,8 +25,7 @@ lemma point_in_between_of_in_line_segment (ℓ : Line Ω) (hAℓ : A ∉ ℓ) (h
 	C ∈ pts (A⬝B) ∩ ℓ → A * C * B :=
 begin
 	intro h,
-	simp only [set.mem_inter_eq, mem_coe_to_mem, segments_are_symmetric,
-		Segment.mem_coe_to_mem_pts] at h,
+	simp only [set.mem_inter_eq, segments_are_symmetric] at h,
 	rcases h with ⟨( h1| h1) | h2, hC⟩,
 		tauto,
 	{

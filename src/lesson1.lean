@@ -1,5 +1,4 @@
 import .hpdefs
-import tactic
 
 open_locale classical
 noncomputable theory
@@ -39,7 +38,7 @@ lemma segments_are_symmetric' : pts (A⬝B) ⊆ pts (B⬝A) :=
 begin
     intros x hx,
     simp at *,
-    rcases hx with (h | h | h); tauto,
+    tauto,
 end
 
 lemma segments_are_symmetric : pts (A⬝B) = B⬝A :=
@@ -66,7 +65,7 @@ end
 
 lemma exists_point_on_line (ℓ : Line Ω): ∃ A : Ω, A ∈ ℓ :=
 begin
-	have I2 := I2' ℓ,
+	have I2 := I2 ℓ,
 	rcases I2 with ⟨ A, B, hAB, hAℓ, hBℓ⟩,
 	exact ⟨A, hAℓ⟩,
 end

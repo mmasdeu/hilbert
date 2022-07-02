@@ -1,4 +1,3 @@
-import tactic
 import .lesson1
 
 noncomputable theory

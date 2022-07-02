@@ -62,9 +62,8 @@ begin
 	cases h,
 	split,
 	{
-		rw collinear_of_equal at h_left,
-		rw collinear_of_equal,
-		finish,
+		rw collinear_of_equal ({A, B, C} : set Ω) ({C, B, A} : set Ω) at h_left,
+		exact h_left,
 	},
 	{
 		rw [show distance A C = distance C A, by rw distance_symm] at h_right,
@@ -143,7 +142,7 @@ begin
 	intro h,
 	split,
 	{
-		rw collinear_of_equal,
+		rw collinear_of_equal ({C, B, A} : set Ω) {A, B, C},
 		exact h.1,
 	},
 	{

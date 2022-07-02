@@ -25,7 +25,7 @@ end
 lemma same_side_of_line.symm (hAℓ : A ∈ ℓ) :
     same_side_of_line hAℓ B C →  same_side_of_line hAℓ C B :=
 begin
-    simp only [Segment.mem_pts, and_imp, same_side_of_line, mem_coe_to_mem, between_point_symmetric] at *,
+    simp only [Segment.mem_pts, and_imp, same_side_of_line, between_point_symmetric] at *,
     tauto,
 end
 
@@ -53,7 +53,6 @@ begin
         rw iff_false,
         push_neg,
         intros H hx,
-        rw mem_coe_to_mem at hx,
         rcases H with (H|H|H),
         any_goals {subst H, simp only at hx, exfalso},
         work_on_goal 3 {have hxℓ : x ∈ ℓ := between_points_share_line hB hC H},
@@ -98,7 +97,7 @@ begin
             specialize H A,
             apply H,
             simp only [true_and, set.mem_inter_eq, true_or, eq_self_iff_true,
-            mem_coe_to_mem, segments_are_symmetric, Segment.mem_coe_to_mem_pts],
+            segments_are_symmetric],
             split,
             {
                 finish,

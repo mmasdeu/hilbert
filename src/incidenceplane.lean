@@ -42,6 +42,7 @@ class IncidencePlane (Point : Type*) :=
 	(Line : Type*)
   (belongs : Point → Line → Prop)
 	(infix `∈`:100 := belongs)
+
 	-- Existence postulate
 	(existence : ∃ P Q : Point, P ≠ Q)
 
@@ -49,7 +50,7 @@ class IncidencePlane (Point : Type*) :=
 	(line_through : Point → Point → Line)
 	(line_through_left (P Q : Point) : P ∈ (line_through P Q))
 	(line_through_right (P Q : Point) : Q ∈ (line_through P Q))
-	(incidence {P Q : Point} {ℓ : Line} : P ≠ Q → P ∈  ℓ → Q ∈ ℓ → ℓ = line_through P Q)
+	(incidence {P Q : Point} {ℓ : Line} : P ≠ Q → P ∈ ℓ → Q ∈ ℓ → ℓ = line_through P Q)
 
 
 namespace IncidencePlane
@@ -72,9 +73,10 @@ by rw [incidence hAB hAr hBr, incidence hAB hAs hBs]
 -- Define collinearity of a set of points to mean that they all lie on some line
 def collinear (S : set Ω) : Prop := ∃ (ℓ : Line Ω), ∀ {P : Ω}, P ∈ S → P ∈ ℓ
 
+
 -- The next lemmas allow us to deal with collinearity of sets
 meta def extfinish : tactic unit := `[ext, finish]
-lemma collinear_of_equal {S T : set Ω} (h : S = T . extfinish) : (collinear S ↔ collinear T) :=
+lemma collinear_of_equal (S T : set Ω) (h : S = T . extfinish) : (collinear S ↔ collinear T) :=
 iff_of_eq (congr_arg collinear h)
 
 lemma collinear_subset (S T : set Ω) (hST : S ⊆ T) : collinear T → collinear S :=

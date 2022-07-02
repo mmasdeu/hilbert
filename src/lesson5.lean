@@ -34,7 +34,7 @@ begin
             exact hAℓ hA,
 		have hD : D ∈ pts (A⬝B) ∩ ℓ,
 		{
-			simp only [segments_are_symmetric, Segment.mem_coe_to_mem_pts],
+			simp only [segments_are_symmetric],
 			exact ⟨ or.inr (or.inr (B11 hADB)), hDℓ⟩,
 		},
 		have hD' : pts (A⬝B) ∩ ℓ ≠ ∅ := set.nonempty.ne_empty (set.nonempty_of_mem hD),

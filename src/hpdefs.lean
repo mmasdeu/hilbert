@@ -3,9 +3,28 @@ import tactic
 noncomputable theory
 open_locale classical
 
-def pts {α β : Type*} [has_mem α β] (S : β) : set α := {x : α | x ∈ S}
+@[protect_proj]
+class subset (A : Type*) (B : out_param $ Type*) :=
+(mem : B → A → Prop)
 
-@[simp] lemma mem_pts {α β : Type*} [has_mem α β] (x : α) (S : β) : x ∈ pts S ↔ x ∈ S :=  iff.rfl
+namespace subset
+-- The following allows us to use the symbol `∈`
+instance {A : Type*} {B : Type*} [subset A B] : has_mem B A := ⟨subset.mem⟩
+
+-- This says that two "subset"s are equivalent (written `≈`, type with \approx) when
+-- they have the same points.
+instance {A : Type*} {B : Type*} [subset A B] : has_equiv A := ⟨λ X Y, ∀ t, t ∈ X ↔ t ∈ Y⟩
+@[simp] lemma equiv_iff {A : Type*} {B : Type*} [subset A B] (X Y : A) : X ≈ Y ↔ ∀ t, t ∈ X ↔ t ∈ Y := iff.rfl
+
+-- A "subset" can always be considered as an actual subset, in Lean this is `set B`
+instance {A : Type*} {B : Type*} [subset A B] : has_coe_t A (set B) := ⟨λ x p, p ∈ x⟩
+
+@[simp] lemma mem_pts  {A : Type*} {B : Type*} [subset A B] (a : A) (P : B) : P ∈ (a : set B) ↔ P ∈ a
+:= iff.rfl
+
+end subset
+
+@[simp] def pts {A : Type*} {B : Type*} [subset A B] : A → set B := λ a, {x : B | x ∈ a}
 
 notation p `xor` q := (p ∧ ¬ q) ∨ (q ∧ ¬ p)
 def xor3 (p q r : Prop) : Prop := (p ∧ ¬ q ∧ ¬ r) ∨ (¬ p ∧ q ∧ ¬ r) ∨ (¬ p ∧ ¬ q ∧ r)
@@ -18,30 +37,21 @@ class PreHilbertPlane (Point : Type*) :=
   (notation A `∈` ℓ := belongs A ℓ)
 
 	-- I1: there is a unique line passing through two distinct points.
-	(I1' {A B : Point} (h : A ≠ B) : ∃! (ℓ : Line) , A ∈ ℓ ∧ B ∈ ℓ)
+	(I1 {A B : Point} (h : A ≠ B) : ∃! (ℓ : Line) , A ∈ ℓ ∧ B ∈ ℓ)
 
 	-- I2: any line contains at least two points.
-	(I2' (ℓ : Line) : ∃ A B : Point, A ≠ B ∧ A ∈ ℓ ∧ B ∈ ℓ)
+	(I2 (ℓ : Line) : ∃ A B : Point, A ≠ B ∧ A ∈ ℓ ∧ B ∈ ℓ)
 
 	-- I3: there exists 3 non-collinear points.
-	(I3' : ∃ A B C : Point, (A ≠ B ∧ A ≠ C ∧ B ≠ C ∧ (∀ ℓ : Line, (A ∈ ℓ ∧ B ∈ ℓ) → (¬ (C ∈ ℓ) ))))
+	(I3 : ∃ A B C : Point, (A ≠ B ∧ A ≠ C ∧ B ≠ C ∧ (∀ ℓ : Line, (A ∈ ℓ ∧ B ∈ ℓ) → (¬ (C ∈ ℓ) ))))
 
 namespace PreHilbertPlane
 variables {Ω : Type*} [PreHilbertPlane Ω]
 
-instance : has_mem Ω (Line Ω) := ⟨belongs⟩
+-- From here on, we can use the symbol `∈` for Lines
+instance : subset (Line Ω) Ω := {mem := belongs}
 
-instance Line.has_coe : has_coe (Line Ω) (set Ω) := ⟨pts⟩
-@[simp] lemma mem_coe_to_mem (p : Ω) (ℓ : Line Ω) : p ∈ (ℓ : set Ω) ↔ p ∈ ℓ := iff.rfl
-
-def points_between (A B : Ω) : set Ω := {P : Ω | between A P B}
 notation A `*` B `*` C := PreHilbertPlane.between A B C
-
--- Put the axioms in terms of this has_mem
-lemma I1 {A B : Ω} (h : A ≠ B) : ∃! (ℓ : Line Ω), ( A ∈ ℓ ) ∧ ( B ∈ ℓ ) := I1' h
-lemma I2 (ℓ : Line Ω) : ∃ A B : Ω, A ≠ B ∧ A ∈ ℓ ∧ B ∈ ℓ := I2' ℓ
-lemma I3 : ∃ A B C : Ω, A ≠ B ∧ A ≠ C ∧ B ≠ C ∧ ∀ ℓ : Line Ω, A ∈ ℓ ∧ B ∈ ℓ → ¬ C ∈ ℓ := I3'
-
 
 def collinear_triple (A B C : Ω) : Prop := ∃ {ℓ : Line Ω}, A ∈ ℓ ∧ B ∈ ℓ ∧ C ∈ ℓ
 @[simp] lemma collinear_triple_iff {A B C : Ω} :
@@ -70,28 +80,23 @@ end PreHilbertPlane
 
 open PreHilbertPlane
 
-/-- A segment is created by giving two points. -/
+/--
+Next we introduce the notion of a Segment. A segment is the giving two points, A and B.
+We will use the notation A⬝B to denote the segment denoted by A and B. The segment A⬝B consists
+of all the points X such that A * X * B, together with A and B.
+-/
 structure Segment (Point : Type*) :=
 	(A : Point) (B : Point)
 
 infix `⬝`:100 := Segment.mk
 
 namespace Segment
+
 variables {Ω : Type*} [PreHilbertPlane Ω]
 
-/--
-When thought of as a set, it is the the set consisting of the endpoints
-and all the points between them
--/
-instance : has_mem Ω (Segment Ω) :=
-⟨λ P S, P = S.A ∨ P = S.B ∨ S.A * P * S.B⟩
-
-instance has_coe_to_set : has_coe (Segment Ω) (set Ω) := ⟨pts⟩
-@[simp] lemma mem_coe_to_mem_pts (P : Ω) (S : Segment Ω) :
-	P ∈ (S : set Ω) ↔ (P = S.A ∨ P = S.B ∨ S.A * P * S.B) := iff.rfl
-
-@[simp] lemma mem_pts (P : Ω) (S : Segment Ω) :
-	P ∈ S ↔ (P = S.A ∨ P = S.B ∨ S.A * P * S.B) := iff.rfl
+-- Declare when P ∈ A⬝B
+instance : subset (Segment Ω) Ω := { mem := λ P S, P = S.A ∨ P = S.B ∨ S.A * P * S.B}
+@[simp] lemma mem_pts (S : Segment Ω) (P : Ω) : P ∈ S ↔ P = S.A ∨ P = S.B ∨ S.A * P * S.B := iff.rfl
 
 end Segment
 
@@ -102,15 +107,7 @@ notation A `=>` B := Ray.mk A B
 namespace Ray
 variables {Ω : Type*} [PreHilbertPlane Ω]
 
-instance : has_mem Ω (Ray Ω) :=
-⟨λ P r, P = r.origin ∨ (collinear_triple r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target))⟩
-
-instance has_coe_to_set : has_coe (Ray Ω) (set Ω) := ⟨pts⟩
-@[simp] lemma mem_coe_to_mem_pts (P : Ω) (r : Ray Ω) :
-	P ∈ (r : set Ω) ↔
-	P = r.origin ∨ (collinear_triple r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target)) := iff.rfl
-@[simp] lemma mem_pts (P : Ω) (r : Ray Ω) :
-	P ∈ pts r ↔ P = r.origin ∨ (collinear_triple r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target)) := iff.rfl
+instance : subset (Ray Ω) Ω := { mem := λ P r, P = r.origin ∨ (collinear_triple r.origin P r.target ∧ ¬ r.origin ∈ pts (P⬝r.target)) }
 
 def nondegenerate (r : Ray Ω) := r.origin ≠ r.target
 
@@ -124,18 +121,6 @@ namespace Angle
 variables {Ω : Type*} [PreHilbertPlane Ω]
 
 def nondegenerate (a : Angle Ω) := ¬ collinear_triple a.A a.x a.B
-
-instance : has_mem Ω (Angle Ω) :=
-⟨λ P a, P ∈ pts (a.x=>a.A) ∨ P ∈ pts (a.x=>a.B)⟩
-
-instance has_coe_to_set : has_coe (Angle Ω) (set Ω) := ⟨pts⟩
-@[simp] lemma mem_coe_to_mem_pts (P : Ω) (a : Angle Ω) :
-	P ∈ (a : set Ω) ↔
-	P ∈ pts (a.x=>a.A) ∨ P ∈ pts (a.x=>a.B) := iff.rfl
-
-@[simp] lemma mem_pts (P : Ω) (a : Angle Ω) :
-	P ∈ a ↔
-	P ∈ pts (a.x=>a.A) ∨ P ∈ pts (a.x=>a.B) := iff.rfl
 
 end Angle
 
@@ -242,7 +227,7 @@ class EuclideanPlane (Point : Type*) extends HilbertPlane Point :=
 namespace HilbertPlane
 
 notation X `≅`:50 Y:50 := HilbertPlane.seg_cong X Y
-notation X `≃`:50 Y:50 := HilbertPlane.ang_cong X Y
+notation X `≅`:50 Y:50 := HilbertPlane.ang_cong X Y
 
 end HilbertPlane
 
@@ -253,26 +238,18 @@ notation `▵`:100 := Triangle.mk
 namespace Triangle
 variables {Ω : Type*} [HilbertPlane Ω]
 
+instance : subset (Triangle Ω) Ω :=
+{mem := λ P T, P ∈ T.A⬝T.B ∨ P ∈ T.B⬝T.C ∨ P ∈ T.A⬝T.C}
+
 def nondegenerate (T : Triangle Ω) := ¬ collinear_triple T.A T.B T.C
 
 def is_similar (T R : Triangle Ω) : Prop :=
-	(∟ T.B T.A T.C ≃ ∟ R.B R.A R.C)
-∧ (∟ T.A T.C T.B ≃ ∟ R.A R.C R.B)
-∧ (∟ T.C T.B T.A ≃ ∟ R.C R.B R.A)
+	(∟ T.B T.A T.C ≅ ∟ R.B R.A R.C)
+∧ (∟ T.A T.C T.B ≅ ∟ R.A R.C R.B)
+∧ (∟ T.C T.B T.A ≅ ∟ R.C R.B R.A)
 
 def is_congruent (T R : Triangle Ω) : Prop :=
 	is_similar T R ∧ (T.A⬝T.B ≅ R.A⬝R.B) ∧ (T.A⬝T.C ≅ R.A⬝R.C) ∧ (T.B⬝T.C ≅ R.B⬝R.C)
 
-instance : has_mem Ω (Triangle Ω) :=
-⟨λ P T, P ∈ pts (T.A⬝T.B) ∨ P ∈ pts (T.B⬝T.C) ∨ P ∈ pts (T.A⬝T.C)⟩
-
-instance has_coe_to_set : has_coe (Triangle Ω) (set Ω) := ⟨pts⟩
-@[simp] lemma mem_coe_to_mem_pts (P : Ω) (T : Triangle Ω) :
-	P ∈ (T : set Ω) ↔
-	P ∈ pts (T.A⬝T.B) ∨ P ∈ pts (T.B⬝T.C) ∨ P ∈ pts (T.A⬝T.C) := iff.rfl
-
-@[simp] lemma mem_pts (P : Ω) (T : Triangle Ω) :
-	P ∈ T ↔
-	P ∈ pts (T.A⬝T.B) ∨ P ∈ pts (T.B⬝T.C) ∨ P ∈ pts (T.A⬝T.C) := iff.rfl
 
 end Triangle

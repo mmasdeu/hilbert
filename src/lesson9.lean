@@ -11,7 +11,6 @@ variables {A B C D E F : Ω}
 
 lemma origin_on_ray : A ∈ pts (A=>B) :=
 begin
-    rw Ray.mem_pts,
     left,
     refl,
 end
@@ -36,7 +35,6 @@ begin
             obtain rfl | hAB := em(A = B), finish,
             right,
             dsimp,
-            rw Ray.mem_pts at hE,
             dsimp at hE,
             rcases hE with (hE | hE), tauto,
             cases h1,
@@ -164,7 +162,6 @@ begin
     split,
     {
         intro h,
-        simp only [_root_.mem_pts, Segment.mem_pts] at h,
         rcases h with h|h|h,
         {
             subst h,

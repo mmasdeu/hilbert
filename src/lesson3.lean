@@ -87,18 +87,16 @@ begin
 	rw set.eq_empty_iff_forall_not_mem,
     -- Now the main part of the proof. AC ∩ ℓ = ∅
     -- So let D be a point in AC and in ℓ. We'll prove False.
-	rintro D ⟨ hDAC, hD⟩,
+	rintro D ⟨ hDAC1, hD⟩,
     obtain rfl | hAD := em(D = A), exact hA hD, -- D ≠ A
     obtain rfl | hCD := em(D = C), exact hC hD, -- D ≠ C
-    simp only [segments_are_symmetric, Segment.mem_coe_to_mem_pts] at hDAC,
-    replace hDAC : C * D * A, tauto,
-    replace hDAC : A * D * C := B11 hDAC, -- So D is between A and C
+    simp [segments_are_symmetric] at hDAC1,
+    have hDAC : A * D * C, by tauto,
 	rcases (B4 h hA hC hB hD hDAC) with
 		⟨ ⟨E, hE, h1⟩, hF⟩ | ⟨ ⟨E, ⟨ hE, h1⟩ ⟩, hF⟩,
 	{
         suffices l_meets_AB : (pts (A⬝B) ∩ ℓ ≠ ∅), by tauto,
         apply set.nmem_singleton_empty.mpr,
-        have h2 : B * E * A := B11 h1,
         exact ⟨E, ⟨or.inr (or.inr h1), hE⟩⟩,
 	},
     {
